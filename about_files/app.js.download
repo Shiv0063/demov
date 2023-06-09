@@ -1,0 +1,115 @@
+"use strict";
+
+// TABLE OF CONTENTS
+//  1. preloader
+//  2. page scrolling feature - requires jQuery Easing plugin
+//  3. fixed navbar
+//  4. back to top
+
+jQuery(function($) {
+    'use strict'; // 1. preloader
+
+    $(window).ready(function() {
+        $('#preloader').fadeOut('fade');
+    }); 
+    // 2. mega menu js
+
+    $('.js-mega-menu').HSMegaMenu({
+        event: 'hover',
+        pageContainer: $('.container'),
+        breakpoint: 767.98,
+        hideTimeOut: 0
+    }); // Off Canvas Menu Open & Close
+
+    $('#offCanvas').on('click', function() {
+        $('.nav-offcanvas').addClass('open');
+        $('.offcanvas-overlay').addClass('on');
+    });
+    $('#offCanvasClose, .offcanvas-overlay').on('click', function() {
+        $('.nav-offcanvas').removeClass('open');
+        $('.offcanvas-overlay').removeClass('on');
+    }); 
+    
+    // 3. fixed navbar
+
+    $(window).on('scroll', function() {
+        // checks if window is scrolled more than 500px, adds/removes solid class
+        if ($(this).scrollTop() > 0) {
+            $('.main-header-menu-wrap').addClass('affix');
+            $('.scroll-to-target').addClass('open');
+        } else {
+            $('.main-header-menu-wrap').removeClass('affix');
+            $('.scroll-to-target').removeClass('open');
+        } // checks if window is scrolled more than 500px, adds/removes top to target class
+
+        if ($(this).scrollTop() > 100) {
+            $('.ferry-search-filter').addClass('sticky');
+        } else {
+            $('.ferry-search-filter').removeClass('sticky');
+        } // checks if window is scrolled more than 500px, adds/removes top to target class
+        if ($(this).scrollTop() > 100) {
+            $('.ferry-search-filter').addClass('sticky');
+        } else {
+            $('.ferry-search-filter').removeClass('sticky');
+        } // checks if window is scrolled more than 500px, adds/removes top to target class
+
+
+        if ($(this).scrollTop() > 100) {
+            $('.scroll-to-target').addClass('open');
+        } else {
+            $('.scroll-to-target').removeClass('open');
+        }
+    }); 
+
+    // 4. back to top
+
+    if ($('.scroll-to-target').length) {
+        $(".scroll-to-target").on('click', function() {
+            var target = $(this).attr('data-target'); // animate
+
+            $('html, body').animate({
+                scrollTop: $(target).offset().top
+            }, 500);
+        });
+    } 
+
+    // $('.ps-gallery-image').lightGallery({
+    //     selector: '.ps-gallery-item',
+    //     thumbnail: true,
+    //     share: false,
+    //     fullScreen: false,
+    //     autoplay: false,
+    //     autoplayControls: false,
+    //     actualSize: false
+    // });
+    // $('.ps-video').lightGallery({
+    //     thumbnail: false,
+    //     share: false,
+    //     fullScreen: false,
+    //     autoplay: false,
+    //     autoplayControls: false,
+    //     actualSize: false
+    // });
+    
+    // /*portfolio Isotope activation*/
+    // $('.portfolio_gallery').imagesLoaded( function() {
+    //     // init Isotope
+    //     var $grid = $('.portfolio_gallery').isotope({
+    //        itemSelector: '.gird_item',
+    //         percentPosition: true,
+    //         masonry: {
+    //             columnWidth: '.gird_item'
+    //         }
+    //     });
+            
+    //     // filter items on button click
+    //     $('.portfolio_button').on( 'click', 'button', function() {
+    //        var filterValue = $(this).attr('data-filter');
+    //        $grid.isotope({ filter: filterValue });
+            
+    //        $(this).siblings('.active').removeClass('active');
+    //        $(this).addClass('active');
+    //     });
+       
+    // });
+}); // JQuery end

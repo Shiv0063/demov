@@ -1,0 +1,373 @@
+var views = 'views/';
+var currentXhr;
+
+
+//for a session timeout manage
+/*
+$.ajaxSetup({
+    beforeSend: function(jqXHR) {
+    },
+    complete: function(jqXHR) {
+        if(isJson(jqXHR.responseText)){
+            var resultdata = jQuery.parseJSON(jqXHR.responseText);
+            if(resultdata.status==-1){ // if jwt token exipre - session out
+                ajaxrequest("POST", sessiontimeout, '', '', OnsuccessRender, OnErrorRender);
+                var headersdata= {Accept: 'application/json',platform: 1,userpagename:'logout',useraction:'addright',masterlisting:false,responsetype: 'HTML'};
+                var formdata = new FormData();
+                formdata.append("action", "logout");
+                formdata.append("phpself", phpself);
+                formdata.append("mastertype", mastertype);
+               
+                setTimeout(() => {
+                    ajaxrequest("POST",endpointurl+'logout',formdata,headersdata,OnsuccessLogout,OnErrorJson);
+                }, 2000);
+            }
+        }
+    }
+});
+*/
+//for a session timeout manage
+
+
+var errormsgarr={ 
+    "passengererror":"Please fill passenger details", 
+    "vehicleerror":"Please fill vehicle details", 
+    "prooferror": "Please fill proof details",
+    "required": "Please fill all required fields",
+    "selectpassenger":"Please select at least one passenger",
+    "selectvechicle":"Please select vehicle",
+    "cancelreason":"Please select reason",
+    "selectatleastone":"Please select at least one action",
+    "invalidemail":"Please enter valid email address",
+    "requiredemail":"Please enter email address",
+    "invalidgstno":"Please enter valid gst no",
+    "selectdeparture":"Please select departure details",
+    "tripnotavailable":"No Trip Available For Selected Date",
+    "invalidvehicleno":"Please enter valid vehicle no",
+    "invalidproofno":"Please enter valid proof details",
+    "pendingpayment":"Your transaction is pending,after sometime click on refresh button",
+    "seatnotavailable":"Seat not available,please try again later",
+    "seatautoselect":"Your Seat will be auto selected",
+    "invalidvehiclenumber":"Invalid Vehicle No"
+};
+
+// Page Navigation on Click Main Menu
+$('body').on('click', '.clsparentmenu', function(e) {
+    var pagename = $(this).attr('pagename');
+    if(pagename)
+    {
+        e.preventDefault(); 
+        if (e.ctrlKey){ //ctrl click event
+            window.open(pagename,'_blank');
+        }
+        else{
+            currentXhr.abort();
+            render(pagename);
+            window.history.pushState(pagename, 'Title', dirpath + pagename);
+        }
+        $('.mobile-footer-sidebar').removeClass('active');
+        $('.navmobile-overlay').removeClass('open');
+        $('.navmobile-overlay').addClass('close');
+        $('.mobile-nav-toggler').removeClass('active');
+    }
+});
+
+
+$('body').on('change','.selectpicker', function () {
+    $(this).parent('div').removeClass('error');  
+	$(this).parent().find('label.error').html('');
+});
+
+
+//middle click event
+$(document).on("mousedown", '#accordionMenu li a, #accordionMenu a' , function(e) {
+    var pagename = $(this).attr('pagename');
+    switch(e.which)
+    {
+        case 1:
+            //left Click
+        break;
+        case 2:
+            //middle Click
+            window.open(pagename,'_blank');
+        break;
+        case 3:
+            //right Click
+        break;
+    }
+    return true;// to allow the browser to know that we handled it.
+});
+//middle click event
+
+$(window).on('popstate', function() {
+    // var urlpath = window.location.pathname;
+    // var pagename = urlpath.split("/");
+    // var pagename = pagename[pagename.length-1];
+    // render(pagename);
+
+    var urlpath = window.location.pathname;
+    var pagename = urlpath.split("/");
+    var pagename = pagename[pagename.length-1];
+    
+    pagenamearry = pagename.split("|");
+    var prefix_pagename = pagenamearry[0];
+
+    if(prefix_pagename == 'bd')
+    {
+        render('blog-details');
+    }
+    else
+    {
+        render(pagename);
+    }
+
+});
+
+
+// Page Render Start
+function render(pagename) {
+    if(pagename=='')
+    {
+        pagename='home'; 
+    }
+
+    ajaxrequest("POST", views + pagename, '', '', OnsuccessRender, OnErrorRender);
+}
+
+function OnsuccessRender(content) {
+    $("#web-content").html(content);
+}
+
+function OnErrorRender(content) {
+    ajaxrequest("POST", page404url, '', '', OnsuccessRender, OnErrorRender);
+}
+// Page Render Start
+
+function getpagename()
+{
+    var urlpath = window.location.pathname;
+    var pagename = urlpath.split("/");
+    var pagename = pagename[pagename.length-1];
+    return pagename;
+}
+
+function ajaxrequest(method, url, paramsdata, headerdata, successCallback, errorCallback) {
+    currentXhr=$.ajax({
+        type: method,
+        url: url + '.php',
+        headers: headerdata,
+        data: paramsdata,
+        processData: false,
+        cache:false,
+        contentType: false,
+        error: errorCallback,
+        success: successCallback
+    });
+}
+
+
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
+
+// Data List End
+
+$('body').on('change', '#per_page', function() {
+    $('#tableDataList').attr('data-nextpage', 0);
+    $(".main-grid").animate({ scrollTop: 0 }, "slow");
+    listdata();
+});
+
+//Filter Start
+$('body').on('click', '#btnfilter', function() {
+    $('#tableDataList').attr('data-nextpage', 0);
+    var filter = $('#filter').val();
+    if (filter) {
+        listdata();
+    }
+});
+
+$('body').on('keyup', '#filter', function(e) {
+    $('#tableDataList').attr('data-nextpage', 0);
+    if (e.keyCode == 13) {
+        listdata();
+        return false;
+    }
+    if (e.keyCode == 8 && ($('#filter').val() == '' || $('#filter').val() == null)) {
+        listdata();
+    }
+});
+//Filter End
+
+
+//Sorting Start
+$('body').on('click', '#tableDataList .sorting', function() {
+    $(".main-grid").animate({ scrollTop: 0 }, "slow");
+    var ordby = $('#ordby').val();
+    var ordbycolumnname = $(this).attr('data-th');
+    $('#ordbycolumnname').val(ordbycolumnname);
+    $('#tableDataList').attr('data-nextpage', 0);
+    if (ordby == 'desc') 
+    {
+        $('.sorting').removeClass('sorting_desc');
+        $('#ordby').val('asc');
+        $(this).addClass('sorting_asc');
+        listdata();
+    } 
+    else if(ordby == 'asc') 
+    {
+        $('.sorting').removeClass('sorting_asc');
+        $('#ordby').val('desc');
+        $(this).addClass('sorting_desc');
+        listdata();
+    }
+});
+//Sorting End
+
+
+function alertify(msg, type) {
+    if (type == 1) {
+        toastr.success(msg, { timeOut: "50000" });
+    } else if (type == 0) {
+        toastr.error(msg , { timeOut: "50000" });
+    }
+}
+
+
+function OnErrorSelectpicker(content)
+{ 
+    alertify('Error', '0');
+}
+
+
+function OnErrorJson(content) {
+}
+
+
+
+function getweekname(date)  //Format : dd/mm/YY
+{
+    var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    var datearr = date.split("/");
+
+    var date1 = datearr[1]+'/'+datearr[0]+'/'+datearr[2];
+    var a = new Date(date1);
+    var weekname = weekday[a.getDay()];
+
+    return weekname;
+}
+
+
+$('body').on('click','.logout-btn', function () {
+    
+    var headersdata= {Accept: 'application/json',platform: 4,userpagename:'logout',useraction:'addright',masterlisting:false,responsetype: 'JSON'};
+    var formdata = new FormData();
+    formdata.append("action", "logout");
+    ajaxrequest("POST",endpointurl+'logout',formdata,headersdata,OnsuccessLogout,OnErrorJson);
+});
+
+
+function OnsuccessLogout(content)
+{
+    var JsonData = JSON.stringify(content);
+    var resultdata = jQuery.parseJSON(JsonData);
+    if(resultdata.redirecturl)
+    {
+        window.location.href = resultdata.redirecturl;
+    }
+}
+
+function OnErrorJson(content) {
+}
+
+
+//Sort Location Array  
+function GetSortLocation(prop) 
+{  
+    return function(a, b) {  
+        if (a[prop] > b[prop]) {  
+            return 1;  
+        } else if (a[prop] < b[prop]) {  
+            return -1;  
+        }  
+        return 0;  
+    }  
+} 
+
+
+// CHECK REGULAR EXPRESSSION
+
+function checkregularexpression(num,expression)
+{
+    // console.log(num,expression);
+    var regex = new RegExp(expression);
+    // console.log(regex.test(num));
+    return regex.test(num);
+
+}
+
+
+
+// Paytm GateWay
+
+function onScriptLoad(txnToken, orderId, amount,dataarray) 
+{
+  
+    var config = {
+        "root": "",
+        "flow": "DEFAULT",
+        "merchant":{
+             "logo":"http://192.168.1.2/rahul/paytm/1/assets/logo.png"
+         },
+         "style":{
+             "headerBackgroundColor":"#8dd8ff",
+             "headerColor":"#3f3f40"
+        },
+        "data": {
+            "orderId": orderId,
+            "token": txnToken,
+            "tokenType": "TXN_TOKEN",
+            "amount": amount,
+        },
+        "handler":{
+             "notifyMerchant": function (eventName, data) {
+                if(eventName == 'SESSION_EXPIRED'){
+                    alert("Your session has expired!!");
+                    location.reload();
+                }
+             }
+        }
+    };
+
+    if (window.Paytm && window.Paytm.CheckoutJS) 
+    {
+        // initialze configuration using init method
+        window.Paytm.CheckoutJS.init(config).then(function onSuccess() 
+        {
+            window.Paytm.CheckoutJS.invoke();
+            $('.btn-preloader').hide();
+            $('#btnbooknow').attr('disabled',false);
+            $('#btnbooknow').find(".btn-preloader").remove();
+            $('#preloader').hide();
+            // $('#btnbooknow').remove('<div class="btn-preloader"><i>.</i><i>.</i><i>.</i></div>');
+
+        }).catch(function onError(error) 
+        {
+            $('.btn-preloader').hide();
+            $('#btnbooknow').attr('disabled',false);
+            // $('#btnbooknow').remove('<div class="btn-preloader"><i>.</i><i>.</i><i>.</i></div>');
+            $('#btnbooknow').find(".btn-preloader").remove();
+            $('#preloader').hide();
+            console.log("Error => ", error);
+        });
+    }
+}
